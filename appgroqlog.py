@@ -165,7 +165,7 @@ if 'last_activity' not in st.session_state:
     st.session_state.last_activity = 0
 
 if st.session_state.authenticated:
-    if time.time() - st.session_state.last_activity > 1800:
+    if time.time() - st.session_state.last_activity > 18000:
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.warning("Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.")
