@@ -139,7 +139,7 @@ def login_page():
     st.write("Silakan masukkan kredensial Anda untuk melanjutkan.")
     VALID_CREDENTIALS = {
         "admin": "password123",
-        "putri": "putri",
+        "user": "U$3R",
         "jeremy": "jeremy",
         "bambang": "hermanto"
     }
