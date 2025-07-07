@@ -30,7 +30,7 @@ def main_app():
     
     2. berikan dalam tabel T01, C01, A01 nya dan code threat pada asvs attack code nya nomor berapa.
 
-    3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan, lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
+    3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan(Source : NIST 800-30), lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
       contoh format output tabel harus seperti dibawah:
       | FLOW PROSES | THREAT            | C | I | A | A | N | SCENARIO                                                                  | REKOMENDASI PENGAMANAN                |
       ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
