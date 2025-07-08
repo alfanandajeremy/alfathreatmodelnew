@@ -32,11 +32,11 @@ def main_app():
 
     3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan(Source : NIST 800-30), lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
       contoh format output tabel harus seperti dibawah:
-      | FLOW PROSES | THREAT            | C | I | A | A | N | SCENARIO                                                                  | REKOMENDASI PENGAMANAN                |
+      | FLOW PROSES | THREAT                             | C | I | A | A | N | SCENARIO                                                                  | REKOMENDASI PENGAMANAN                |
       ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      | user login  | injection A06:01  | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login    | implementasikan parameterize queries  |    
-      |             |                   |   |   |   |   |   |                                                                           |                                       |
-      |             |                   |   |   |   |   |   |                                                                           |                                       |   
+      | user login  | contoh threat :injection A06:01    | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login    | implementasikan parameterize queries  |    
+      |             |                                    |   |   |   |   |   |                                                                           |                                       |
+      |             |                                    |   |   |   |   |   |                                                                           |                                       |   
 
     4. memberikan penilaian DREAD dalam penilaian ancaman dimana kategorinya (INFORMATIONAL=1, LOW RISK=2, MEDIUM=3, HIGH RISK=4, CRITICAL =5.) berikan nilai pada masing masing komponen dalam satu kolom. misalkan : Discoverability = 3 , reproducibility = 2, nanti dari nilai semuanya dibagi 5 itu merupakan score nya.
     
