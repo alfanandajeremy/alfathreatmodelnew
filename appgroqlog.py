@@ -1,17 +1,19 @@
-import streamlit as st
-import groq
-from PIL import Image
-import os
-import time
+# --- FUNGSI UTAMA APLIKASI (SUDAH DIMODIFIKASI) ---
+# --- Pastikan Anda sudah menambahkan impor di bagian atas file ---
+# from fpdf import FPDF
 
-# --- 1. Konfigurasi Halaman Web ---
-st.set_page_config(
-    page_title="Alfa Threat Model Expert Analysis",
-    page_icon="⚡️",
-    layout="centered"
-)
+# --- Fungsi untuk membuat PDF (letakkan di luar main_app) ---
+def create_pdf(text):
+    """
+    Membuat file PDF dari string teks.
+    """
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=11)
+    pdf.multi_cell(0, 10, txt=text)
+    return pdf.output(dest='S').encode('latin-1')
 
-# --- FUNGSI UTAMA APLIKASI ---
+
 def main_app():
     """Fungsi ini berisi seluruh aplikasi utama Anda setelah login berhasil."""
     
@@ -32,11 +34,11 @@ def main_app():
 
     3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan(Source : NIST 800-30), lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
       contoh format output tabel harus seperti dibawah:
-      | FLOW PROSES | THREAT                             | C | I | A | A | N | SCENARIO                                                                  | REKOMENDASI PENGAMANAN                |
+      | FLOW PROSES | THREAT                       | C | I | A | A | N | SCENARIO                                                      | REKOMENDASI PENGAMANAN                |
       ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      | user login  | contoh threat :injection A06:01    | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login    | implementasikan parameterize queries  |    
-      |             |                                    |   |   |   |   |   |                                                                           |                                       |
-      |             |                                    |   |   |   |   |   |                                                                           |                                       |   
+      | user login  | contoh threat :injection A06:01    | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login    | implementasikan parameterize queries  |      
+      |             |                                    |   |   |   |   |   |                                                                       |                                       |
+      |             |                                    |   |   |   |   |   |                                                                       |                                       |   
 
     4. memberikan penilaian DREAD dalam penilaian ancaman dimana kategorinya (INFORMATIONAL=1, LOW RISK=2, MEDIUM=3, HIGH RISK=4, CRITICAL =5.) berikan nilai pada masing masing komponen dalam satu kolom. misalkan : Discoverability = 3 , reproducibility = 2, nanti dari nilai semuanya dibagi 5 itu merupakan score nya.
     
@@ -89,15 +91,30 @@ def main_app():
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    # --- Tampilkan riwayat chat LAMA. Perubahan ada di bagian bawah ---
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+            # Jika pesan dari asisten, tampilkan juga tombol download untuk riwayat chat
+            if message["role"] == "assistant":
+                pdf_bytes = create_pdf(message["content"])
+                st.download_button(
+                    label="📄 Simpan Hasil sebagai PDF",
+                    data=pdf_bytes,
+                    file_name=f"hasil_analisis_{message['content'][:20].replace(' ', '_')}.pdf",
+                    mime="application/pdf",
+                    key=f"download_{message['content'][:20]}" # key unik untuk setiap tombol
+                )
+
 
     # --- Terima Input Pengguna dan Proses ---
     if prompt := st.chat_input("Deskripsikan skenario atau ajukan pertanyaan keamanan..."):
         if not client:
             st.error("Tidak dapat melanjutkan. Klien Groq belum terinisialisasi.")
         else:
+            # Hapus riwayat chat lama agar hanya menampilkan hasil terbaru
+            st.session_state.messages = [] 
+            
             with st.chat_message("user"):
                 st.markdown(prompt)
 
@@ -110,12 +127,13 @@ def main_app():
                 final_prompt = f"Berdasarkan sebuah file bernama '{uploaded_file.name}', jawab pertanyaan ini dari sudut pandang keamanan siber: {prompt}"
                 st.success("Konteks file berhasil ditambahkan ke dalam prompt.")
 
+            # Tambahkan prompt pengguna ke riwayat
             st.session_state.messages.append({"role": "user", "content": final_prompt})
 
             try:
                 # Sisipkan system prompt sebelum mengirim ke API
                 system_message = {"role": "system", "content": SYSTEM_PROMPT_CONTENT}
-                messages_to_send = [system_message] + st.session_state.messages
+                messages_to_send = [system_message] + [{"role": "user", "content": final_prompt}] # Kirim hanya prompt terbaru
 
                 with st.spinner(f"Alfa Threat sedang menganalisis tunggu ya!!! ... 🤔"):
                     chat_completion = client.chat.completions.create(
@@ -124,55 +142,22 @@ def main_app():
                     )
                 
                 response_text = chat_completion.choices[0].message.content
+                # Tambahkan respons AI ke riwayat
                 st.session_state.messages.append({"role": "assistant", "content": response_text})
-                
+
+                # Tampilkan respons AI yang baru
                 with st.chat_message("assistant"):
                     st.markdown(response_text)
                     
+                    # --- INI BAGIAN UTAMA PENAMBAHAN FITUR ---
+                    pdf_bytes = create_pdf(response_text)
+                    st.download_button(
+                        label="📄 Simpan Hasil sebagai PDF",
+                        data=pdf_bytes,
+                        file_name="hasil_analisis_alfathreat.pdf",
+                        mime="application/pdf"
+                    )
+                # st.rerun() # Opsional: jika ingin membersihkan input box dan merender ulang dari message log
+
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat berkomunikasi dengan API Groq. Detail: {e}")
-                st.session_state.messages.pop()
-
-# --- FUNGSI UNTUK HALAMAN LOGIN (Tidak ada perubahan) ---
-def login_page():
-    st.title("Login ke Alfa Threat Model")
-    st.write("Silakan masukkan kredensial Anda untuk melanjutkan.")
-    VALID_CREDENTIALS = {
-        "admin": "password123",
-        "user": "U$3R",
-        "jeremy": "jeremy",
-        "bambang": "hermanto"
-    }
-    with st.form("login_form"):
-        username = st.text_input("Username").lower()
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Login")
-        if submitted:
-            if username in VALID_CREDENTIALS and password == VALID_CREDENTIALS[username]:
-                st.session_state.authenticated = True
-                st.session_state.username = username
-                st.session_state.last_activity = time.time()
-                st.rerun()
-            else:
-                st.error("Username atau password salah.")
-
-# --- KONTROL ALUR APLIKASI (Tidak ada perubahan) ---
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
-if 'username' not in st.session_state:
-    st.session_state.username = ""
-if 'last_activity' not in st.session_state:
-    st.session_state.last_activity = 0
-
-if st.session_state.authenticated:
-    if time.time() - st.session_state.last_activity > 18000:
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.warning("Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.")
-        time.sleep(3)
-        st.rerun()
-
-if st.session_state.authenticated:
-    main_app()
-else:
-    login_page()
