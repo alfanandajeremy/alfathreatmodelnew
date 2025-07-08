@@ -61,7 +61,7 @@ def main_app():
         
         # Ambil API Key dari Streamlit secrets
         if 'GROQ_API_KEY' not in st.session_state:
-            st.session_state.GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
+            st.session_state.GROQ_API_KEY = st.secrets.get("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")
         
         st.subheader("Unggah File")
         st.markdown("Unggah file untuk dianalisis (opsional).")
