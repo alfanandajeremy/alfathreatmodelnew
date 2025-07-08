@@ -1,4 +1,4 @@
-import streamlit as st
+saimport streamlit as st
 import groq
 from PIL import Image
 import os
@@ -90,7 +90,7 @@ def main_app():
 
     # --- SYSTEM PROMPT (Tidak ada perubahan) ---
     SYSTEM_PROMPT_CONTENT = """
-    Anda adalah pakar keamanan siber dengan pengalaman 30 tahun, yang mahir dalam mengidentifikasi dan menganalisis potensi ancaman keamanan siber lebih dari 30 tahun. jika ada pertanyaan diluar cyber security jangan berikan jawaban.
+    Anda adalah pakar keamanan siber dengan pengalaman 30 tahun, yang mahir dalam mengidentifikasi dan menganalisis potensi ancaman keamanan siber berdasarkan asvs dan cwe lebih dari 30 tahun. jika ada pertanyaan diluar cyber security jangan berikan jawaban.
     Peran Anda adalah membuat kajian/report dalam tabel yang rapih serta up to date dengan perkembangan cyber security atas poin berikut :
     1. gambarkan threat modelling diagram dfd menggunakan arrow
     
