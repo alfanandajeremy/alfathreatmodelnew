@@ -52,7 +52,7 @@ def main_app():
         st.subheader(f"Selamat datang, {st.session_state['username']}!")
         
         if 'GROQ_API_KEY' not in st.session_state:
-            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
+            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
         
         st.subheader("Unggah File")
         st.markdown("Unggah file untuk dianalisis.")
