@@ -3,3 +3,4 @@ groq
 pillow
 fpdf2
 xhtml2pdf
+markdown2
