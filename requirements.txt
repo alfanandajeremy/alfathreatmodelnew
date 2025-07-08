@@ -2,3 +2,5 @@ streamlit
 groq
 pillow
 fpdf2
+weasyprint
+markdown2
