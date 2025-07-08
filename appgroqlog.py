@@ -4,12 +4,70 @@ from PIL import Image
 import os
 import time
 
+# --- TAMBAHAN: Impor library yang dibutuhkan untuk membuat PDF ---
+from weasyprint import HTML
+import markdown2
+import base64
+from io import BytesIO
+
 # --- 1. Konfigurasi Halaman Web ---
 st.set_page_config(
     page_title="Alfa Threat Model Expert Analysis",
     page_icon="⚡️",
     layout="centered"
 )
+
+# --- TAMBAHAN: Fungsi untuk membuat tautan unduh PDF ---
+def create_pdf_download_link(markdown_content, filename="alfa_threat_analysis.pdf"):
+    """
+    Mengubah konten Markdown menjadi PDF dan menghasilkan tautan untuk mengunduhnya.
+    """
+    try:
+        # Mengubah Markdown menjadi HTML, dengan dukungan untuk tabel
+        html_string = markdown2.markdown(
+            markdown_content,
+            extras=["tables", "fenced-code-blocks", "code-friendly"]
+        )
+        
+        # Menambahkan beberapa gaya dasar (CSS) agar PDF terlihat lebih rapi
+        full_html = f"""
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: 'Helvetica', sans-serif; font-size: 12px; }}
+                    table {{ border-collapse: collapse; width: 100%; margin-bottom: 1em; }}
+                    th, td {{ border: 1px solid #dddddd; text-align: left; padding: 8px; word-wrap: break-word; }}
+                    th {{ background-color: #f2f2f2; font-weight: bold; }}
+                    pre, code {{
+                        background-color: #f4f4f4; padding: 2px 4px;
+                        border-radius: 3px; font-family: 'Courier New', monospace;
+                        white-space: pre-wrap; word-wrap: break-word;
+                    }}
+                    pre {{ padding: 1em; overflow-x: auto; }}
+                    h1, h2, h3 {{ font-family: 'Helvetica', sans-serif; }}
+                </style>
+            </head>
+            <body>
+                {html_string}
+            </body>
+        </html>
+        """
+
+        # Membuat PDF di dalam memori
+        pdf_bytes = HTML(string=full_html, base_url=".").write_pdf()
+        
+        # Meng-encode PDF ke format base64
+        b64_pdf = base64.b64encode(pdf_bytes).decode()
+        
+        # Membuat tautan unduhan HTML
+        href = f'<a href="data:application/octet-stream;base64,{b64_pdf}" download="{filename}" style="display: inline-block; padding: 8px 12px; background-color: #FF4B4B; color: white; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold;">💾 Unduh Analisis (PDF)</a>'
+        return href
+    except Exception as e:
+        # Jika terjadi error saat membuat PDF, tampilkan pesan error
+        st.error(f"Gagal membuat PDF: {e}")
+        return ""
+
 
 # --- FUNGSI UTAMA APLIKASI ---
 def main_app():
@@ -32,11 +90,11 @@ def main_app():
 
     3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan, lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
       contoh format output tabel harus seperti dibawah:
-      | FLOW PROSES              | THREAT                           | C | I | A | A | N | SCENARIO                                                                  | REKOMENDASI PENGAMANAN                |
+      | FLOW PROSES            | THREAT                    | C | I | A | A | N | SCENARIO                                                     | REKOMENDASI PENGAMANAN             |
       ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      | contoh flow: user login  | contoh threat :injection A06:01  | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login    | implementasikan parameterize queries  |    
-      |                          |                                  |   |   |   |   |   |                                                                           |                                       |
-      |                          |                                  |   |   |   |   |   |                                                                           |                                       |   
+      | contoh flow: user login  | contoh threat :injection A06:01  | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login   | implementasikan parameterize queries   |      
+      |                        |                           |   |   |   |   |   |                                                              |                                    |
+      |                        |                           |   |   |   |   |   |                                                              |                                    |   
 
     4. memberikan penilaian DREAD dalam penilaian ancaman dimana kategorinya (INFORMATIONAL=1, LOW RISK=2, MEDIUM=3, HIGH RISK=4, CRITICAL =5.) berikan nilai pada masing masing komponen dalam satu kolom. misalkan : Discoverability = 3 , reproducibility = 2, nanti dari nilai semuanya dibagi 5 itu merupakan score nya.
     
@@ -92,6 +150,10 @@ def main_app():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+            # --- TAMBAHAN: Tampilkan juga tombol unduh untuk riwayat chat ---
+            if message["role"] == "assistant":
+                pdf_download_link = create_pdf_download_link(message["content"], f"analisis_{message['content'][:20].replace(' ', '_')}.pdf")
+                st.markdown(pdf_download_link, unsafe_allow_html=True)
 
     # --- Terima Input Pengguna dan Proses ---
     if prompt := st.chat_input("Deskripsikan skenario atau ajukan pertanyaan keamanan..."):
@@ -123,12 +185,17 @@ def main_app():
                         model=model_option,
                     )
                 
-                response_text = chat_completion.choices[0].message.content
-                st.session_state.messages.append({"role": "assistant", "content": response_text})
+                    response_text = chat_completion.choices[0].message.content
+                    st.session_state.messages.append({"role": "assistant", "content": response_text})
                 
-                with st.chat_message("assistant"):
-                    st.markdown(response_text)
-                    
+                    with st.chat_message("assistant"):
+                        st.markdown(response_text)
+                        
+                        # --- TAMBAHAN: Buat dan tampilkan link download PDF untuk respons baru ---
+                        if response_text:
+                            pdf_download_link = create_pdf_download_link(response_text)
+                            st.markdown(pdf_download_link, unsafe_allow_html=True)
+                            
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat berkomunikasi dengan API Groq. Detail: {e}")
                 st.session_state.messages.pop()
@@ -171,6 +238,7 @@ if st.session_state.authenticated:
         time.sleep(3)
         st.rerun()
 
+# --- TAMBAHAN: Kondisi untuk memastikan sesi tidak berakhir saat login ---
 if st.session_state.authenticated:
     main_app()
 else:
