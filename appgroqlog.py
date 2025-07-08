@@ -94,7 +94,7 @@ def main_app():
     Peran Anda adalah membuat kajian/report dalam tabel yang rapih serta up to date dengan perkembangan cyber security atas poin berikut :
     1. gambarkan threat modelling diagram dfd menggunakan arrow
     
-    2. berikan dalam tabel T01, C01, A01 nya dan code threat pada asvs attack code nya nomor berapa.
+    2. berikan dalam tabel T01, C01, A01 nya dan code threat pada mittre nya nomor berapa saja.
 
     3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan, lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
       contoh format output tabel harus seperti dibawah:
