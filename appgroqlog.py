@@ -4,7 +4,11 @@ from PIL import Image
 import os
 import time
 import base64
-from fpdf import FPDF
+
+# Impor library yang dibutuhkan
+import markdown2
+from xhtml2pdf import pisa
+from io import BytesIO
 
 # --- 1. Konfigurasi Halaman Web ---
 st.set_page_config(
@@ -13,42 +17,65 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- FUNGSI UNTUK MEMBUAT PDF (VERSI FINAL) ---
-def create_pdf_download_link_fpdf2(text_content, filename="alfa_threat_analysis.pdf"):
+# --- FUNGSI FINAL PEMBUAT PDF (TANPA DEPENDENSI TAMBAHAN) ---
+def create_pdf_with_xhtml2pdf(markdown_content, filename="alfa_threat_analysis.pdf"):
     """
-    Mengubah konten teks menjadi PDF menggunakan FPDF2 dan menghasilkan tautan unduhan.
-    Kode ini sudah memperbaiki error 'bytearray' dan masalah path file font.
+    Mengubah konten Markdown menjadi PDF yang rapi menggunakan xhtml2pdf.
+    Solusi ini murni Python dan tidak memerlukan packages.txt.
     """
     try:
-        pdf = FPDF()
-        pdf.add_page()
+        # 1. Ubah Markdown ke HTML
+        html_string = markdown2.markdown(
+            markdown_content,
+            extras=["tables", "fenced-code-blocks", "code-friendly"]
+        )
         
-        # Membuat path absolut ke file font agar andal di lingkungan cloud
-        script_dir = os.path.dirname(__file__)
-        font_path = os.path.join(script_dir, "DejaVuSans.ttf")
+        # 2. Tambahkan CSS untuk memastikan tabel dan format lainnya rapi
+        full_html = f"""
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    @page {{ margin: 2cm; }}
+                    body {{ font-family: 'Helvetica', sans-serif; font-size: 10pt; }}
+                    table {{ border-collapse: collapse; width: 100%; }}
+                    th, td {{ border: 1px solid #000; padding: 5px; text-align: left; }}
+                    th {{ background-color: #f2f2f2; font-weight: bold; }}
+                    pre, code {{
+                        background-color: #f4f4f4; padding: 2px 4px;
+                        border: 1px solid #ddd; border-radius: 3px;
+                        font-family: 'Courier New', monospace; white-space: pre-wrap;
+                    }}
+                </style>
+            </head>
+            <body>
+                {html_string}
+            </body>
+        </html>
+        """
+        
+        # 3. Buat PDF di memori
+        result_file = BytesIO()
+        pisa_status = pisa.CreatePDF(
+            BytesIO(full_html.encode("UTF-8")), # source HTML
+            dest=result_file,                   # destination file
+            encoding='UTF-8'
+        )
 
-        try:
-            # Menambahkan font yang mendukung karakter Unicode
-            pdf.add_font('DejaVu', '', font_path, uni=True)
-            pdf.set_font('DejaVu', '', 11)
-        except RuntimeError:
-            st.error(f"Font tidak ditemukan di path: {font_path}. Pastikan 'DejaVuSans.ttf' ada di repositori GitHub Anda.")
-            pdf.set_font("Arial", size=11) # Fallback jika font tidak ditemukan
+        # 4. Jika pembuatan PDF gagal, tampilkan error
+        if pisa_status.err:
+            st.error(f"Gagal membuat PDF: {pisa_status.err}")
+            return ""
 
-        # Menulis konten teks ke PDF
-        pdf.multi_cell(0, 5, text_content)
+        # 5. Siapkan tautan unduhan
+        result_file.seek(0)
+        b64_pdf = base64.b64encode(result_file.read()).decode()
         
-        # PERBAIKAN: .output() sudah menghasilkan bytes, jadi .encode() dihapus
-        pdf_output = pdf.output()
-        
-        # Meng-encode PDF ke format base64 untuk membuat tautan unduhan
-        b64_pdf = base64.b64encode(pdf_output).decode()
-        
-        # Membuat tautan unduhan dalam format HTML
         href = f'<a href="data:application/octet-stream;base64,{b64_pdf}" download="{filename}" style="display: inline-block; padding: 8px 12px; background-color: #FF4B4B; color: white; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold;">💾 Unduh Analisis (PDF)</a>'
         return href
+
     except Exception as e:
-        st.error(f"Gagal membuat PDF dengan FPDF2: {e}")
+        st.error(f"Terjadi kesalahan tak terduga saat membuat PDF: {e}")
         return ""
 
 # --- FUNGSI UTAMA APLIKASI ---
@@ -131,7 +158,7 @@ def main_app():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message["role"] == "assistant":
-                pdf_download_link = create_pdf_download_link_fpdf2(message["content"], f"analisis_{message['content'][:20].replace(' ', '_')}.pdf")
+                pdf_download_link = create_pdf_with_xhtml2pdf(message["content"], f"analisis_{message['content'][:20].replace(' ', '_')}.pdf")
                 st.markdown(pdf_download_link, unsafe_allow_html=True)
 
     # Menerima Input Pengguna dan Proses
@@ -169,9 +196,8 @@ def main_app():
                     with st.chat_message("assistant"):
                         st.markdown(response_text)
                         
-                        # Membuat dan menampilkan link download PDF untuk respons baru
                         if response_text:
-                            pdf_download_link = create_pdf_download_link_fpdf2(response_text)
+                            pdf_download_link = create_pdf_with_xhtml2pdf(response_text)
                             st.markdown(pdf_download_link, unsafe_allow_html=True)
                             
             except Exception as e:
@@ -208,16 +234,13 @@ if 'username' not in st.session_state:
 if 'last_activity' not in st.session_state:
     st.session_state.last_activity = 0
 
-# Logika untuk memeriksa sesi timeout
 if st.session_state.authenticated:
-    if time.time() - st.session_state.last_activity > 1800: # Timeout 30 menit
+    if time.time() - st.session_state.last_activity > 1800:
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.warning("Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.")
         time.sleep(3)
         st.rerun()
-
-# Menentukan halaman mana yang akan ditampilkan
 if st.session_state.authenticated:
     main_app()
 else:
