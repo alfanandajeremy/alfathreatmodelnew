@@ -2,7 +2,3 @@ streamlit
 groq
 pillow
 fpdf2
-weasyprint
-markdown2
-base64
-BytesIO
