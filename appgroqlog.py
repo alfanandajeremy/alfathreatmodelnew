@@ -46,9 +46,9 @@ def main_app():
     2. Berikan tabel T01, C01, A01 dan kode ancaman pada ASVS.
     3. Buat tabel kerentanan (Confidentiality, Integrity, Authentication, Availability, Non-repudiation) untuk setiap ancaman. Sertakan jenis ancaman (SQLi, XSS, IDOR, DDoS), skenario serangan (Sumber: NIST 800-30), dan minimal 5 rekomendasi keamanan.
        Contoh format tabel:
-       | FLOW PROSES | ANCAMAN | C | I | A | A | N | SKENARIO SERANGAN | REKOMENDASI PENGAMANAN |
-       |-------------|---------|---|---|---|---|---|-------------------|------------------------|
-       | User Login  | A03:Injection | v | v | v |   | v | Penyerang memasukkan payload SQL pada form login. | Gunakan parameterized queries. |
+       | FLOW PROSES              | ANCAMAN                       | C | I | A | A | N | SKENARIO SERANGAN | REKOMENDASI PENGAMANAN                                         |
+       |--------------------------|-------------------------------|---|---|---|---|-----------------------|----------------------------------------------------------------|
+       | contoh flow :User Login  | contoh threat : A03:Injection | v | v | v |   | v | Penyerang memasukkan payload SQL pada form login. | Gunakan parameterized queries. |
     4. Berikan penilaian DREAD (Damage, Reproducibility, Exploitability, Affected Users, Discoverability) dengan skala: INFORMATIONAL=1, LOW=2, MEDIUM=3, HIGH=4, CRITICAL=5. Hitung skor rata-rata (Total / 5).
     5. Gunakan standar industri seperti OWASP, ASVS, Gartner, dan NIST.
     6. Batasi jawaban hanya pada lingkup keamanan siber.
