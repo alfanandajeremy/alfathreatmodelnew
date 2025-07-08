@@ -1,4 +1,4 @@
-saimport streamlit as st
+import streamlit as st
 import groq
 from PIL import Image
 import os
