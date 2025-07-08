@@ -4,8 +4,6 @@ from PIL import Image
 import os
 import time
 import base64
-
-# --- DIUBAH: Impor library FPDF2 ---
 from fpdf import FPDF
 
 # --- 1. Konfigurasi Halaman Web ---
@@ -15,80 +13,106 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- DIUBAH: Fungsi untuk membuat tautan unduh PDF menggunakan FPDF2 ---
+# --- FUNGSI UNTUK MEMBUAT PDF (VERSI FINAL) ---
 def create_pdf_download_link_fpdf2(text_content, filename="alfa_threat_analysis.pdf"):
     """
     Mengubah konten teks menjadi PDF menggunakan FPDF2 dan menghasilkan tautan unduhan.
+    Kode ini sudah memperbaiki error 'bytearray' dan masalah path file font.
     """
     try:
         pdf = FPDF()
         pdf.add_page()
         
-        # Menambahkan font yang mendukung karakter Unicode (PENTING!)
-        # Pastikan file DejaVuSans.ttf ada di folder yang sama dengan app.py
-        # Unduh di sini: https://dejavu-fonts.github.io/
+        # Membuat path absolut ke file font agar andal di lingkungan cloud
+        script_dir = os.path.dirname(__file__)
+        font_path = os.path.join(script_dir, "DejaVuSans.ttf")
+
         try:
-            pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+            # Menambahkan font yang mendukung karakter Unicode
+            pdf.add_font('DejaVu', '', font_path, uni=True)
             pdf.set_font('DejaVu', '', 11)
         except RuntimeError:
-            # Fallback ke font standar jika DejaVu tidak ditemukan
-            st.warning("Font DejaVuSans.ttf tidak ditemukan. Menggunakan font standar. Beberapa karakter mungkin tidak tampil.")
-            pdf.set_font("Arial", size=11)
+            st.error(f"Font tidak ditemukan di path: {font_path}. Pastikan 'DejaVuSans.ttf' ada di repositori GitHub Anda.")
+            pdf.set_font("Arial", size=11) # Fallback jika font tidak ditemukan
 
-        # Menulis konten teks ke PDF. multi_cell akan menangani baris baru.
+        # Menulis konten teks ke PDF
         pdf.multi_cell(0, 5, text_content)
         
-        # Meng-output PDF sebagai byte string dan di-encode
-        pdf_output = pdf.output(dest='S').encode('latin-1')
+        # PERBAIKAN: .output() sudah menghasilkan bytes, jadi .encode() dihapus
+        pdf_output = pdf.output()
         
-        # Meng-encode PDF ke format base64
+        # Meng-encode PDF ke format base64 untuk membuat tautan unduhan
         b64_pdf = base64.b64encode(pdf_output).decode()
         
-        # Membuat tautan unduhan HTML
+        # Membuat tautan unduhan dalam format HTML
         href = f'<a href="data:application/octet-stream;base64,{b64_pdf}" download="{filename}" style="display: inline-block; padding: 8px 12px; background-color: #FF4B4B; color: white; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold;">💾 Unduh Analisis (PDF)</a>'
         return href
     except Exception as e:
         st.error(f"Gagal membuat PDF dengan FPDF2: {e}")
         return ""
 
-
 # --- FUNGSI UTAMA APLIKASI ---
 def main_app():
-    # ... (Sisa fungsi main_app() tetap sama persis) ...
+    """Fungsi ini berisi seluruh aplikasi utama Anda setelah login berhasil."""
+    
     st.session_state.last_activity = time.time()
+    
     st.title("⚡️ Alfa Threat Model Expert Analysis")
     st.write("Deskripsikan Flow aplikasi maka alfathreat akan menganalisa nya dengan mudah dan akurat ")
     st.markdown("---")
+
+    # --- SYSTEM PROMPT (Tidak ada perubahan) ---
     SYSTEM_PROMPT_CONTENT = """
     Anda adalah pakar keamanan siber dengan pengalaman 30 tahun, yang mahir dalam mengidentifikasi dan menganalisis potensi ancaman keamanan siber lebih dari 30 tahun. jika ada pertanyaan diluar cyber security jangan berikan jawaban.
     Peran Anda adalah membuat kajian/report dalam tabel yang rapih serta up to date dengan perkembangan cyber security atas poin berikut :
     1. gambarkan threat modelling diagram dfd menggunakan arrow
+    
     2. berikan dalam tabel T01, C01, A01 nya dan code threat pada asvs attack code nya nomor berapa.
+
     3. berikan list kerentanan dalam satu tabel pada Confidentiallity,Integrity, Authentication, Availability, Non repudiation atas threat tersebut termasuk dalam threat apa (misalkan contoh serangan sql,xss, idor, ddos) lalu pada kolom sampingnya berikan Scenario serangan, lalu pada kolom sampingnya serta rekomendasi keamananya pada tabel minimal 5 rekomendasi.
       contoh format output tabel harus seperti dibawah:
       | FLOW PROSES            | THREAT                    | C | I | A | A | N | SCENARIO                                                     | REKOMENDASI PENGAMANAN             |
       ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       | contoh flow: user login  | contoh threat :injection A06:01  | v |   | v |   | v | fraudster menyerang dengan cara masuk ke sistem dan injeksi form login   | implementasikan parameterize queries   |      
+      
     4. memberikan penilaian DREAD dalam penilaian ancaman dimana kategorinya (INFORMATIONAL=1, LOW RISK=2, MEDIUM=3, HIGH RISK=4, CRITICAL =5.) berikan nilai pada masing masing komponen dalam satu kolom. misalkan : Discoverability = 3 , reproducibility = 2, nanti dari nilai semuanya dibagi 5 itu merupakan score nya.
+    
     5. Menggunakan standar industri dan praktik terbaik dari OWASP, ASVS, Gartner, NIST, serta standar keamanan siber internasional lainnya untuk memberikan analisis teknis.
+    
     6. Selalu batasi jawaban Anda hanya dalam lingkup keamanan siber. Jangan menjawab pertanyaan di luar topik ini.
+    
     7. semua outputnya bahasa indonesia dan jangan buang makna serapan bahasa inggrisnya.
     """
+
+    # --- Sidebar untuk Unggah File dan Kontrol ---
     with st.sidebar:
         st.subheader(f"Selamat datang, {st.session_state['username']}!")
+        
         if 'GROQ_API_KEY' not in st.session_state:
-            st.session_state.GROQ_API_KEY = "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"
+            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
+        
         st.subheader("Unggah File")
         st.markdown("Unggah file untuk dianalisis.")
-        uploaded_file = st.file_uploader("Pilih file",type=["jpeg", "jpg", "png", "pdf", "txt"])
+        uploaded_file = st.file_uploader(
+            "Pilih file",
+            type=["jpeg", "jpg", "png", "pdf", "txt"]
+        )
+        
         st.subheader("Model")
-        model_option = st.selectbox('Pilih model yang akan digunakan:',('llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it'))
+        model_option = st.selectbox(
+            'Pilih model yang akan digunakan:',
+            ('llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it')
+        )
+
         if uploaded_file:
             st.success(f"File '{uploaded_file.name}' siap dianalisis.")
+            
         if st.button("Logout"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
+
+    # Inisialisasi Klien Groq
     client = None
     if st.session_state.GROQ_API_KEY:
         try:
@@ -97,10 +121,12 @@ def main_app():
             st.error(f"Gagal menginisialisasi klien Groq. Pastikan kunci API Anda valid. Error: {e}")
     else:
         st.warning("Kunci API Groq tidak ditemukan. Harap pastikan sudah diatur.")
+
+    # Inisialisasi riwayat chat
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # --- DIUBAH: Panggil fungsi fpdf2 untuk riwayat chat ---
+    # Menampilkan riwayat chat dan tombol unduh
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -108,12 +134,14 @@ def main_app():
                 pdf_download_link = create_pdf_download_link_fpdf2(message["content"], f"analisis_{message['content'][:20].replace(' ', '_')}.pdf")
                 st.markdown(pdf_download_link, unsafe_allow_html=True)
 
+    # Menerima Input Pengguna dan Proses
     if prompt := st.chat_input("Deskripsikan skenario atau ajukan pertanyaan keamanan..."):
         if not client:
             st.error("Tidak dapat melanjutkan. Klien Groq belum terinisialisasi.")
         else:
             with st.chat_message("user"):
                 st.markdown(prompt)
+
             final_prompt = prompt
             if uploaded_file is not None:
                 st.info(f"Menganalisis file: **{uploaded_file.name}**...")
@@ -122,30 +150,43 @@ def main_app():
                     st.image(image, caption=f"File gambar: {uploaded_file.name}", use_column_width=True)
                 final_prompt = f"Berdasarkan sebuah file bernama '{uploaded_file.name}', jawab pertanyaan ini dari sudut pandang keamanan siber: {prompt}"
                 st.success("Konteks file berhasil ditambahkan ke dalam prompt.")
+
             st.session_state.messages.append({"role": "user", "content": final_prompt})
+
             try:
                 system_message = {"role": "system", "content": SYSTEM_PROMPT_CONTENT}
                 messages_to_send = [system_message] + st.session_state.messages
+
                 with st.spinner(f"Alfa Threat sedang menganalisis tunggu ya!!! ... 🤔"):
-                    chat_completion = client.chat.completions.create(messages=messages_to_send, model=model_option)
+                    chat_completion = client.chat.completions.create(
+                        messages=messages_to_send,
+                        model=model_option,
+                    )
+                
                     response_text = chat_completion.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": response_text})
+                
                     with st.chat_message("assistant"):
                         st.markdown(response_text)
                         
-                        # --- DIUBAH: Panggil fungsi fpdf2 untuk respons baru ---
+                        # Membuat dan menampilkan link download PDF untuk respons baru
                         if response_text:
                             pdf_download_link = create_pdf_download_link_fpdf2(response_text)
                             st.markdown(pdf_download_link, unsafe_allow_html=True)
+                            
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat berkomunikasi dengan API Groq. Detail: {e}")
                 st.session_state.messages.pop()
 
-# --- Fungsi login dan kontrol alur tetap sama ---
+# --- FUNGSI UNTUK HALAMAN LOGIN (Tidak ada perubahan) ---
 def login_page():
     st.title("Login ke Alfa Threat Model")
     st.write("Silakan masukkan kredensial Anda untuk melanjutkan.")
-    VALID_CREDENTIALS = {"admin": "password123", "putri": "putri", "jeremy": "jeremy"}
+    VALID_CREDENTIALS = {
+        "admin": "password123",
+        "putri": "putri",
+        "jeremy": "jeremy"
+    }
     with st.form("login_form"):
         username = st.text_input("Username").lower()
         password = st.text_input("Password", type="password")
@@ -159,6 +200,7 @@ def login_page():
             else:
                 st.error("Username atau password salah.")
 
+# --- KONTROL ALUR APLIKASI (Tidak ada perubahan) ---
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'username' not in st.session_state:
@@ -166,13 +208,16 @@ if 'username' not in st.session_state:
 if 'last_activity' not in st.session_state:
     st.session_state.last_activity = 0
 
+# Logika untuk memeriksa sesi timeout
 if st.session_state.authenticated:
-    if time.time() - st.session_state.last_activity > 1800:
+    if time.time() - st.session_state.last_activity > 1800: # Timeout 30 menit
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.warning("Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.")
         time.sleep(3)
         st.rerun()
+
+# Menentukan halaman mana yang akan ditampilkan
 if st.session_state.authenticated:
     main_app()
 else:
