@@ -206,7 +206,7 @@ def main_app():
 
 # --- FUNGSI UNTUK HALAMAN LOGIN (Tidak ada perubahan) ---
 def login_page():
-    st.title("Login ke Alfa Threat Model")
+    st.title("Login Alfa Threat Model")
     st.write("Silakan masukkan kredensial Anda untuk melanjutkan.")
     VALID_CREDENTIALS = {
         "admin": "password123",
