@@ -128,7 +128,7 @@ def main_app():
         st.subheader("Model")
         model_option = st.selectbox(
             'Pilih model yang akan digunakan:',
-            ('meta-llama/llama-4-scout-17b-16e-instruct')
+            ('llama-3.3-70b-versatile')
         )
 
         if uploaded_file:
