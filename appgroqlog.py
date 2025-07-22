@@ -116,7 +116,7 @@ def main_app():
         st.subheader(f"Selamat datang, {st.session_state['username']}!")
         
         if 'GROQ_API_KEY' not in st.session_state:
-            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
+            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
         
         st.subheader("Unggah File")
         st.markdown("Unggah file untuk dianalisis.")
@@ -128,7 +128,7 @@ def main_app():
         st.subheader("Model")
         model_option = st.selectbox(
             'Pilih model yang akan digunakan:',
-            ('llama-3.3-70b-versatile')
+            ('whisper-large-v3-turbo')
         )
 
         if uploaded_file:
