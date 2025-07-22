@@ -128,7 +128,7 @@ def main_app():
         st.subheader("Model")
         model_option = st.selectbox(
             'Pilih model yang akan digunakan:',
-            ('llama-3.3-70b-versatile')
+            ('llama-3.3-70b-versatile','deepseek-r1-distill-llama-70b')
         )
 
         if uploaded_file:
