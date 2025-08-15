@@ -128,7 +128,7 @@ def main_app():
         st.subheader("Model")
         model_option = st.selectbox(
             'Pilih model yang akan digunakan:',
-            ('qwen/qwen3-32b','deepseek-r1-distill-llama-70b','llama-3.3-70b-versatile','deepseek-r1-distill-llama-70b')
+            ('whisper-large-v3-turbo','qwen/qwen3-32b','deepseek-r1-distill-llama-70b','llama-3.3-70b-versatile','deepseek-r1-distill-llama-70b')
         )
 
         if uploaded_file:
@@ -245,6 +245,7 @@ if st.session_state.authenticated:
     main_app()
 else:
     login_page()
+
 
 
 
