@@ -116,7 +116,7 @@ def main_app():
         st.subheader(f"Selamat datang, {st.session_state['username']}!")
         
         if 'GROQ_API_KEY' not in st.session_state:
-            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
+            st.session_state.GROQ_API_KEY = "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" # Ganti dengan kunci Anda jika perlu
         
         st.subheader("Unggah File")
         st.markdown("Unggah file untuk dianalisis.")
@@ -128,7 +128,7 @@ def main_app():
         st.subheader("Model")
         model_option = st.selectbox(
             'Pilih model yang akan digunakan:',
-            ('llama-3.3-70b-versatile','deepseek-r1-distill-llama-70b')
+            ('qwen/qwen3-32b',llama-3.3-70b-versatile','deepseek-r1-distill-llama-70b')
         )
 
         if uploaded_file:
@@ -245,4 +245,5 @@ if st.session_state.authenticated:
     main_app()
 else:
     login_page()
+
 
