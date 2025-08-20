@@ -1,2 +1,9 @@
 libpangocairo-1.0-0
 libffi-dev
+streamlit
+groq
+Pillow
+markdown2
+xhtml2pdf
+pandas
+openpyxl
