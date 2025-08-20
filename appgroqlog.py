@@ -63,6 +63,7 @@ def _shape_tables_for_pdf(raw_html: str) -> str:
         if score < max(5, len(mapped) // 2):
             return table_html  # bukan tabel target
 
+        # target: 9 kolom → 18,22,4,4,4,4,4,22,18
         widths = [18, 22, 4, 4, 4, 4, 4, 22, 18]
         n = len(mapped)
         if n == 9:
@@ -147,7 +148,7 @@ def create_pdf_with_xhtml2pdf(markdown_content, filename="alfa_threat_analysis.p
                         font-weight: bold;
                         text-align: center;
                     }}
-                    /* Pusatkan kolom CIA/Au/Av/N jika ada */
+                    /* Pusatkan kolom CIA/Av/Au/N jika ada */
                     th:nth-child(3), th:nth-child(4), th:nth-child(5), th:nth-child(6), th:nth-child(7),
                     td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7) {{
                         text-align: center;
@@ -448,7 +449,7 @@ def main_app():
     """
 
     with st.sidebar:
-        st.subheader(f"Selamat datang, {st.session_state['username']}!")
+        st.subheader(f"Selamat datang, {st.session_state.get('username','')}!")
 
         if 'GROQ_API_KEY' not in st.session_state:
             st.session_state.GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "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").strip()
@@ -486,14 +487,14 @@ def main_app():
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Tampilkan riwayat + unduhan
-    for message in st.session_state.messages:
+    # Tampilkan riwayat + unduhan (pakai key unik)
+    for idx, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message["role"] == "assistant":
                 pdf_download_link = create_pdf_with_xhtml2pdf(
                     message["content"],
-                    f"analisis_{message['content'][:20].replace(' ', '_')}.pdf"
+                    f"analisis_{idx}.pdf"
                 )
                 st.markdown(pdf_download_link, unsafe_allow_html=True)
                 excel_bytes = create_excel_from_markdown(
@@ -504,10 +505,12 @@ def main_app():
                     st.download_button(
                         "📥 Unduh Analisis (Excel)",
                         data=excel_bytes,
-                        file_name="alfa_threat_analysis.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        file_name=f"alfa_threat_analysis_{idx}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key=f"excel_download_{idx}"
                     )
 
+    # Input pengguna
     if prompt := st.chat_input("Deskripsikan skenario atau ajukan pertanyaan keamanan..."):
         if not client:
             st.error("Tidak dapat melanjutkan. Klien Groq belum terinisialisasi.")
@@ -541,16 +544,22 @@ def main_app():
                     with st.chat_message("assistant"):
                         st.markdown(response_text)
 
-                        pdf_download_link = create_pdf_with_xhtml2pdf(response_text)
+                        # PDF (link, tidak perlu key)
+                        pdf_download_link = create_pdf_with_xhtml2pdf(
+                            response_text,
+                            f"analisis_latest.pdf"
+                        )
                         st.markdown(pdf_download_link, unsafe_allow_html=True)
 
+                        # Excel (pakai key unik)
                         excel_bytes = create_excel_from_markdown(response_text, "alfa_threat_analysis.xlsx")
                         if excel_bytes:
                             st.download_button(
                                 "📥 Unduh Analisis (Excel)",
                                 data=excel_bytes,
-                                file_name="alfa_threat_analysis.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                file_name="alfa_threat_analysis_latest.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key=f"excel_download_latest_{len(st.session_state.messages)}"
                             )
 
             except Exception as e:
