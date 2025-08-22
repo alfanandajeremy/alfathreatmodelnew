@@ -35,7 +35,7 @@ def process_uploaded_file(uploaded_file):
 
     if file_type in ["image/jpeg", "image/png"]:
         image = Image.open(uploaded_file)
-        st.image(image, caption=f"File gambar: {uploaded_file.name}", use_column_width=True)
+        st.image(image, caption=f"File gambar: {uploaded_file.name}", use_container_width=True)
         return f"File gambar '{uploaded_file.name}' berhasil diproses."
     
     elif file_type == "text/plain":
