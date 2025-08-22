@@ -7,3 +7,4 @@ markdown2
 pandas
 openpyxl
 xlsxwriter
+pytesseract
