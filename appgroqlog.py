@@ -1,18 +1,9 @@
 import streamlit as st
-import groq
+import pytesseract
 from PIL import Image
 import time
 import base64
 import re
-import io
-
-# HTML/Markdown -> PDF
-import markdown2
-from xhtml2pdf import pisa
-from io import BytesIO, StringIO
-
-# Excel
-import pandas as pd
 
 # =========================
 # 1) Konfigurasi Halaman
@@ -27,30 +18,46 @@ st.set_page_config(
 # 3) File Processing Functions
 # =========================
 
+def read_image(image_file):
+    """
+    Fungsi untuk membaca teks dari gambar menggunakan OCR
+    """
+    image = Image.open(image_file)
+    text = pytesseract.image_to_string(image)  # OCR untuk mengekstrak teks
+    return text
+
 def process_uploaded_file(uploaded_file):
     """
-    Process the uploaded file based on its type
+    Proses file yang diunggah berdasarkan tipe file
     """
     file_type = uploaded_file.type
 
     if file_type in ["image/jpeg", "image/png"]:
         image = Image.open(uploaded_file)
         st.image(image, caption=f"File gambar: {uploaded_file.name}", use_container_width=True)
-        return f"File gambar '{uploaded_file.name}' berhasil diproses."
+        
+        # Baca teks dari gambar menggunakan OCR
+        extracted_text = read_image(uploaded_file)
+        
+        # Menampilkan teks yang diekstrak di dalam chat
+        with st.chat_message("user"):
+            st.markdown(f"**Teks dari gambar:**\n{extracted_text}")
+        
+        # Analisis sederhana: jika ada kata kunci tertentu
+        if "password" in extracted_text.lower():
+            response = "Gambar ini tampaknya mengandung informasi sensitif terkait kata sandi. Pastikan untuk menjaga kerahasiaannya."
+        else:
+            response = "Gambar berhasil diproses dan teks diekstraksi."
+
+        return response
     
     elif file_type == "text/plain":
         text_data = uploaded_file.getvalue().decode("utf-8")
         st.text_area("File teks yang diunggah", text_data, height=300)
         return f"File teks '{uploaded_file.name}' berhasil diproses."
 
-    elif file_type == "application/pdf":
-        pdf_data = uploaded_file.read()
-        # You can process the PDF here (e.g., extract text using PyMuPDF, pdfplumber, etc.)
-        st.write("PDF file uploaded, content processing is yet to be implemented.")
-        return f"File PDF '{uploaded_file.name}' berhasil diproses."
-
     else:
-        st.error("File type tidak didukung. Harap unggah file gambar, teks, atau PDF.")
+        st.error("File type tidak didukung. Harap unggah file gambar atau teks.")
         return f"File type '{file_type}' tidak didukung."
 
 # =========================
@@ -89,7 +96,7 @@ def main_app():
         st.markdown("Unggah file untuk dianalisis.")
         uploaded_file = st.file_uploader(
             "Pilih file",
-            type=["jpeg", "jpg", "png", "pdf", "txt"]
+            type=["jpeg", "jpg", "png", "txt"]
         )
 
         if uploaded_file:
