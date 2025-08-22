@@ -5,6 +5,7 @@ import time
 import base64
 import re
 import groq
+
 # =========================
 # 1) Konfigurasi Halaman
 # =========================
@@ -209,4 +210,3 @@ if st.session_state.authenticated:
     main_app()
 else:
     login_page()
-
