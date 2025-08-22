@@ -9,6 +9,10 @@ import groq
 # =========================
 # 1) Konfigurasi Halaman
 # =========================
+
+# Menjalankan setup.sh untuk menginstal Tesseract
+!bash setup.sh  # Jalankan setup.sh untuk menginstal Tesseract
+
 st.set_page_config(
     page_title="Alfa Threat Model Expert Analysis",
     page_icon="⚡️",
