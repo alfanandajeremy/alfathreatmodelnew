@@ -452,7 +452,7 @@ def main_app():
         st.subheader(f"Selamat datang, {st.session_state.get('username','')}!")
 
         if 'GROQ_API_KEY' not in st.session_state:
-            st.session_state.GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "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").strip()
+            st.session_state.GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "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").strip()
 
         st.subheader("Unggah File")
         st.markdown("Unggah file untuk dianalisis.")
@@ -614,3 +614,4 @@ if st.session_state.authenticated:
     main_app()
 else:
     login_page()
+
